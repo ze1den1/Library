@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Изменение данных | Библиотека</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/change.css') }}"/>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-user-edit"></i> Изменение данных профиля</h1>
+            <p>Обновите вашу личную информацию</p>
+        </div>
+
+        <div class="type-selector" id="typeSelector">
+            <div class="type-option active" data-type="name">
+                <i class="fas fa-user"></i> ФИО
+            </div>
+            <div class="type-option" data-type="birthday">
+                <i class="fas fa-birthday-cake"></i> Дата рождения
+            </div>
+        </div>
+
+        <div class="edit-card">
+            <form class="form-box" action="" method="post">
+            <!-- Форма для изменения имени -->
+            <div id="nameForm" class="form-content active">
+                <div class="form-header">
+                    <div class="form-icon icon-name">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <div class="form-title">
+                        <h2>Изменение имени</h2>
+                        <p>Обновите ваше ФИО</p>
+                    </div>
+                </div>
+
+                <div class="current-value">
+                    Текущее значение: <strong>{{ current_user.full_name }}</strong>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ФИО</label>
+                    {{ form.full_name(class="form-input", value=current_user.full_name, type="text", placeholder="Введите ваше имя") }}
+                    <span class="form-hint">Можно использовать только буквы и дефисы</span>
+                </div>
+
+            </div>
+
+            <!-- Форма для изменения даты рождения -->
+            <div id="birthdayForm" class="form-content">
+                <div class="form-header">
+                    <div class="form-icon icon-birthday">
+                        <i class="fas fa-birthday-cake"></i>
+                    </div>
+                    <div class="form-title">
+                        <h2>Изменение даты рождения</h2>
+                        <p>Укажите вашу настоящую дату рождения</p>
+                    </div>
+                </div>
+
+                <div class="current-value">
+                    Текущее значение: <strong>{{ current_user.birthday }}</strong>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Дата рождения</label>
+                    {{ form.birthday(class="form-input", value=current_user.birthday, type="date") }}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a class="btn btn-cancel" href="profile">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+                {{ form.submit(type="submit", class="btn btn-save") }}
+            </div>
+            </form>
+        </div>
+
+        <div class="footer">
+            <p><i class="fas fa-shield-alt"></i> Ваши данные защищены | Система библиотеки © 2025</p>
+        </div>
+    </div>
+</body>
+</html>

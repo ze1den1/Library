@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Библиотека Онлайн | Главная</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"/>
+</head>
+<body>
+    <!-- Шапка сайта -->
+    <header class="header">
+        <div class="header-container">
+            <a href="#" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div class="logo-text">Библиотека Онлайн</div>
+            </a>
+
+            <nav class="nav">
+                {% if not current_user.is_authenticated %}
+                <div class="auth-buttons" id="guestButtons">
+                    <a class="btn btn-outline" href="login">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </a>
+                    <a class="btn btn-primary" href="register">
+                        <i class="fas fa-user-plus"></i> Зарегистрироваться
+                    </a>
+                </div>
+
+                {% else %}
+                <a class="btn btn-secondary" href="catalog">
+                    <i class="fas fa-book"></i> Каталог книг
+                </a>
+
+                <a href="profile" class="btn btn-primary" id="profileBtn">
+                    <div class="user-avatar" id="userAvatar"></div>
+                    <span id="userName">Профиль</span>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-container">
+            <h1>Ваша цифровая библиотека всегда с вами</h1>
+            <p>Читайте любимые книги в любое время, ведите учет прочитанного, открывайте для себя новые произведения и присоединяйтесь к сообществу читателей</p>
+
+            <div class="hero-buttons">
+                {% if not current_user.is_authenticated %}
+                <a class="btn btn-primary" href="register">
+                    <i class="fas fa-user-plus"></i> Начать читать бесплатно
+                </a>
+                {% endif %}
+                <a class="btn btn-outline" href="catalog">
+                    <i class="fas fa-book-open"></i> Посмотреть каталог
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <h2 class="section-title">Почему выбирают нас</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <h3>Обширная коллекция</h3>
+                <p>Более 50,000 книг различных жанров: от классики до современных бестселлеров</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-user-clock"></i>
+                </div>
+                <h3>Читайте где угодно</h3>
+                <p>Доступ к вашей библиотеке с любого устройства: компьютера, планшета или телефона</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Учет прогресса</h3>
+                <p>Отслеживайте сколько книг прочитали, ведите список желаний и получайте рекомендации</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Сообщество читателей</h3>
+                <p>Обсуждайте книги, делитесь впечатлениями и находите единомышленников</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="popular-books">
+        <div class="popular-container">
+            <h2 class="section-title">Популярные книги</h2>
+            <div class="books-grid">
+                <div class="book-card">
+                    <div class="book-cover">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="book-info">
+                        <h4>Мастер и Маргарита</h4>
+                        <p>Михаил Булгаков</p>
+                        <div class="book-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="book-card">
+                    <div class="book-cover">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="book-info">
+                        <h4>1984</h4>
+                        <p>Джордж Оруэлл</p>
+                        <div class="book-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="far fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="book-card">
+                    <div class="book-cover">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="book-info">
+                        <h4>Преступление и наказание</h4>
+                        <p>Федор Достоевский</p>
+                        <div class="book-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="book-card">
+                    <div class="book-cover">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="book-info">
+                        <h4>Маленький принц</h4>
+                        <p>Антуан де Сент-Экзюпери</p>
+                        <div class="book-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Статистика -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3>50,000+</h3>
+                    <p>Книг в каталоге</p>
+                </div>
+                <div class="stat-item">
+                    <h3>25,000+</h3>
+                    <p>Активных читателей</p>
+                </div>
+                <div class="stat-item">
+                    <h3>150,000+</h3>
+                    <p>Прочитанных книг</p>
+                </div>
+                <div class="stat-item">
+                    <h3>4.8/5</h3>
+                    <p>Рейтинг приложения</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <div class="footer-logo-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="footer-logo-text">Библиотека Онлайн</div>
+                </div>
+                <p>Цифровая библиотека для современных читателей. Читайте, открывайте, вдохновляйтесь.</p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Навигация</h4>
+                <ul>
+                    <li><a href="#">Главная</a></li>
+                    <li><a href="catalog">Каталог книг</a></li>
+                    <li><a href="popular">Популярное</a></li>
+                    <li><a href="new">Новинки</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Аккаунт</h4>
+                <ul>
+                    <li><a href="login">Вход</a></li>
+                    <li><a href="register">Регистрация</a></li>
+                    <li><a href="profile">Профиль</a></li>
+                    <li><a href="profile">Настройки</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Контакты</h4>
+                <ul>
+                    <li><a href="https://t.me/kustsmorodin"><i class="fas fa-envelope"></i> tg: smorodina64 </a></li>
+                    <li><a href="#"><i class="fas fa-phone"></i> +7 (917) 833-77-06 </a></li>
+                    <li><a href="#"><i class="fas fa-map-marker-alt"></i>  Made By Дарья Кувшинова, 2025 ©</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="copyright">
+            <p>© 2025 Библиотека Онлайн. Все права защищены.</p>
+        </div>
+    </footer>
+
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль пользователя | Библиотека</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/profile.css') }}"/>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-user-circle"></i> Мой профиль</h1>
+            <p>Управление личной информацией и настройками учетной записи</p>
+        </div>
+
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="avatar">
+                    <!-- TODO: инициалы в аватаре -->
+                </div>
+                <div class="user-info">
+                    <h2>{{ current_user.full_name }}</h2>
+                </div>
+            </div>
+
+            <div class="profile-details">
+                <div class="detail-item">
+                    <span class="detail-label"><i class="far fa-calendar-alt"></i> Дата рождения</span>
+                    <span class="detail-value">{{ current_user.birthday }}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label"><i class="far fa-envelope"></i> Email</span>
+                    <span class="detail-value">{{ current_user.email }}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label"><i class="fas fa-book"></i> Книг прочитано</span>
+                    <span class="detail-value">0</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label"><i class="fas fa-clock"></i> Активность</span>
+                    <span class="detail-value">На этой неделе: 0 ч 10 мин</span>
+                </div>
+            </div>
+
+            <div class="actions-section">
+                <h3 class="section-title">Управление профилем</h3>
+                <div class="action-buttons">
+                    <a class="btn btn-edit" href="change_profile">
+                        <i class="fas fa-user-edit"></i> Изменить имя
+                    </a>
+
+                    <a class="btn btn-edit" href="change_profile">
+                        <i class="fas fa-birthday-cake"></i> Изменить дату рождения
+                    </a>
+
+                    <a class="btn btn-edit" href="change_email">
+                        <i class="fas fa-at"></i> Изменить email
+                    </a>
+
+                    <a class="btn btn-password" href="change_password">
+                        <i class="fas fa-key"></i> Изменить пароль
+                    </a>
+                </div>
+            </div>
+
+            <div class="actions-section">
+                <h3 class="section-title">Безопасность</h3>
+                <div class="action-buttons">
+                    <a class="btn btn-logout" href="logout">
+                        <i class="fas fa-sign-out-alt a"></i> Выйти из учетной записи
+                    </a>
+
+                    <a class="btn btn-delete" href="delete">
+                        <i class="fas fa-trash-alt a"></i> Удалить учетную запись
+                    </a>
+                </div>
+            </div>
+
+            <div class="actions-section">
+                <h3 class="section-title">Навигация</h3>
+                <div class="action-buttons-home">
+                    <a class="btn btn-home" href="/">
+                        <i class="fas fa-sign-out-alt a"></i> На главную
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Система управления библиотекой &copy; 2025</p>
+            <p><i class="fas fa-shield-alt"></i> Ваши данные защищены</p>
+        </div>
+    </div>
+
+    <script>
+        // Обработчики для кнопок
+        document.getElementById('editNameBtn').addEventListener('click', function() {
+            alert('Функция изменения имени будет доступна в следующем обновлении.');
+        });
+
+        document.getElementById('editBirthdayBtn').addEventListener('click', function() {
+            alert('Для изменения даты рождения обратитесь к администратору.');
+        });
+
+        document.getElementById('editEmailBtn').addEventListener('click', function() {
+            alert('На ваш текущий email будет отправлено письмо с инструкциями.');
+        });
+
+        document.getElementById('changePasswordBtn').addEventListener('click', function() {
+            alert('Открыта форма изменения пароля.');
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if(confirm('Вы уверены, что хотите выйти из учетной записи?')) {
+                alert('Вы вышли из системы. Перенаправление на главную страницу...');
+                // Здесь обычно код для выхода из системы
+            }
+        });
+
+        document.getElementById('deleteAccountBtn').addEventListener('click', function() {
+            if(confirm('ВНИМАНИЕ: Это действие необратимо. Все ваши данные будут удалены. Вы уверены?')) {
+                const confirmation = prompt('Для подтверждения введите "УДАЛИТЬ"');
+                if(confirmation === 'УДАЛИТЬ') {
+                    alert('Учетная запись будет удалена в течение 24 часов.');
+                } else {
+                    alert('Действие отменено.');
+                }
+            }
+        });
+
+        // Динамическое обновление инициалов в аватаре
+        const userName = "Алексей Иванов";
+        const nameParts = userName.split(' ');
+        const initials = (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+        document.querySelector('.avatar').textContent = initials;
+    </script>
+</body>
+</html>

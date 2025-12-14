@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Изменение данных | Библиотека</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/change.css') }}"/>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-user-edit"></i> Изменение данных профиля</h1>
+            <p>Обновите вашу личную информацию</p>
+        </div>
+
+        <div class="type-selector" id="typeSelector">
+            <div class="type-option active" data-type="email">
+                <i class="fas fa-envelope"></i> Email
+            </div>
+        </div>
+
+        <div class="edit-card">
+            <form class="form-box" action="" method="post">
+            <!-- Форма для изменения email -->
+            <div id="emailForm" class="form-content">
+                <div class="form-header">
+                    <div class="form-icon icon-email">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="form-title">
+                        <h2>Изменение email</h2>
+                        <p>На новый email будет отправлено письмо для подтверждения</p>
+                    </div>
+                </div>
+
+                <div class="current-value">
+                    Текущий email: <strong>{{ current_user.email }}</strong>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Новый email</label>
+                    {{ form.new_email(class="form-input", type="email", placeholder="Введите новый email") }}
+                    <span class="form-hint" id="emailHint">Введите действительный email адрес</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Подтверждение email</label>
+                    {{ form.confirm_email(class="form-input", type="email", placeholder="Повторите новый email") }}
+                    <span class="form-hint" id="confirmEmailHint">Email адреса должны совпадать</span>
+                </div>
+            </div>
+            <div>{{ message }}</div>
+            <div class="form-actions">
+                <a class="btn btn-cancel" href="profile">
+                    <i class="fas fa-times"></i> Отмена
+                </a>
+                   {{ form.submit(type="submit", class="btn btn-save") }}
+            </div>
+            </form>
+        </div>
+
+        <div class="footer">
+            <p><i class="fas fa-shield-alt"></i> Ваши данные защищены | Система библиотеки © 2025</p>
+        </div>
+    </div>
+
+
+</body>
+</html>

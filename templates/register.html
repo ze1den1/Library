@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | Библиотека</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/register.css') }}"/>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <h1>Библиотека Онлайн</h1>
+            <p>Присоединяйтесь к нашему сообществу читателей</p>
+        </div>
+
+        <div class="form-card">
+            <div class="form-header">
+                <h2>Создание аккаунта</h2>
+                <p>Заполните форму для регистрации</p>
+            </div>
+
+            <form id="registerForm" action="" method="post">
+                <div class="form-group">
+                    <label class="form-label">ФИО *</label>
+                    {{ form.full_name(class="form-input", placeholder="Иванов Алексей Сергеевич") }}
+                    <span class="form-hint" id="fullNameHint">Введите ваше полное имя</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    {{ form.email(class="form-input", type="email", placeholder="example@mail.com") }}
+                    <span class="form-hint" id="emailHint">На этот адрес придет подтверждение</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Дата рождения *</label>
+                    {{ form.birthday(class="form-input", type="date") }}
+                    <span class="form-hint" id="birthDateHint">Вам должно быть не менее 14 лет</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Пароль *</label>
+                    <div class="input-wrapper">
+                        {{ form.password(class="form-input", type="password", id="password", placeholder="Придумайте надежный пароль") }}
+                        <button type="button" class="toggle-password" data-target="password">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-strength">
+                        <div class="strength-meter" id="strengthMeter"></div>
+                    </div>
+                    <span class="form-hint" id="passwordHint">Не менее 8 символов: буквы, цифры, специальные знаки</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirmPassword">Подтверждение пароля *</label>
+                    <div class="input-wrapper">
+                        {{ form.confirm_password(class="form-input", type="password", id="confirmPassword", placeholder="Повторите пароль") }}
+                        <button type="button" class="toggle-password" data-target="confirmPassword">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
+                    <span class="form-hint" id="confirmPasswordHint">Пароли должны совпадать</span>
+                </div>
+
+                <div class="checkbox-group">
+                    {{ form.remember_me(type="checkbox", id="rememberMe") }}
+                    <label for="rememberMe">Запомнить меня</label>
+                </div>
+
+                <div class="terms">
+                    <input type="checkbox" id="agreeTerms">
+                    <label for="agreeTerms">
+                        Я согласен с <a href="#">условиями использования</a> и <a href="#">политикой конфиденциальности</a>
+                    </label>
+                </div>
+                <div>{{ message }}</div>
+                {{ form.submit(type="submit", class="btn btn-register", id="registerBtn") }}
+    </form>
+
+            <div class="auth-link">
+                Уже есть аккаунт? <a href="login">Войти</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Библиотека Онлайн. Все права защищены.</p>
+        </div>
+    </div>
+
+    <script>
+        // Элементы DOM
+            const typeOptions = document.querySelectorAll('.type-option');
+            const formContents = document.querySelectorAll('.form-content');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const saveBtn = document.getElementById('saveBtn');
+        // Показать/скрыть пароль
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'far fa-eye-slash';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'far fa-eye';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

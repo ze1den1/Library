@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог книг | Библиотека</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/catalog.css') }}"/>
+     <style>
+.loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+.loading i {
+    margin-right: 10px;
+    animation: spin 1s linear infinite;
+}
+
+.error-message {
+    display: none;
+    background-color: #fee2e2;
+    border-left: 4px solid #ef4444;
+    padding: 15px;
+    margin: 20px 0;
+    border-radius: 8px;
+    color: #991b1b;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div class="logo-text">Библиотека Онлайн</div>
+            </a>
+            <nav class="nav">
+                {% if current_user.is_authenticated %}
+                <a href="profile" class="user-profile-btn">
+                    <div class="user-avatar"></div>
+                    <span>Профиль</span>
+                </a>
+                {% else %}
+                <a class="btn btn-primary" href="register">
+                        <i class="fas fa-user-plus"></i> Зарегистрироваться
+                </a>
+                <a class="btn btn-outline" href="login">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                </a>
+                {% endif %}
+
+                <a href="/" class="btn btn-outline">
+                    <i class="fas fa-home"></i> На главную
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="main-container">
+        <div class="page-header">
+            <h1 class="page-title">Каталог книг</h1>
+            <p class="page-subtitle">Найдите свою следующую книгу для чтения в нашей коллекции</p>
+        </div>
+
+        <!-- Поисковая строка -->
+        <section class="search-section">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text"
+                       class="search-input"
+                       id="searchInput"
+                       placeholder="Поиск по названию, автору, издательству или году издания...">
+            </div>
+            <p class="search-hint">Начните вводить запрос для поиска книг. Поиск работает по всем полям.</p>
+        </section>
+
+        <!-- Фильтры и результаты -->
+        <section class="filters-section">
+            <div class="results-count">
+                Найдено книг: <span id="resultsCount">12</span>
+            </div>
+
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">
+                    <i class="fas fa-book"></i> Все книги
+                </button>
+                <button class="filter-btn" data-filter="available">
+                    <i class="fas fa-check-circle"></i> Доступные
+                </button>
+                <button class="filter-btn" data-filter="popular">
+                    <i class="fas fa-fire"></i> Популярные
+                </button>
+                <button class="filter-btn" data-filter="new">
+                    <i class="fas fa-star"></i> Новинки
+                </button>
+            </div>
+        </section>
+
+
+        <div class="loading" id="loading" style="display: none; text-align: center; padding: 40px; color: #64748b;">
+            <i class="fas fa-spinner fa-spin"></i> Загрузка книг...
+        </div>
+        <div class="books-grid" id="booksGrid">
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <div class="no-results-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <h3>Книги не найдены</h3>
+            <p>Попробуйте изменить поисковый запрос или выбрать другую категорию</p>
+        </div>
+
+        <div class="pagination" id="pagination">
+            <button class="page-btn disabled" id="prevPage">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn" id="nextPage">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <div class="footer-logo-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="footer-logo-text">Библиотека Онлайн</div>
+                </div>
+                <p>Цифровая библиотека для современных читателей. Читайте, открывайте, вдохновляйтесь.</p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Навигация</h4>
+                <ul>
+                    <li><a href="/">Главная</a></li>
+                    <li><a href="catalog">Каталог книг</a></li>
+                    <li><a href="popular">Популярное</a></li>
+                    <li><a href="new">Новинки</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Аккаунт</h4>
+                <ul>
+                    <li><a href="login">Вход</a></li>
+                    <li><a href="register">Регистрация</a></li>
+                    <li><a href="profile">Профиль</a></li>
+                    <li><a href="profile">Настройки</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Контакты</h4>
+                <ul>
+                    <li><a href="https://t.me/kustsmorodin"><i class="fas fa-envelope"></i> tg: smorodina64</a></li>
+                    <li><a href="#"><i class="fas fa-phone"></i> +7 (917) 833-77-06</a></li>
+                    <li><a href="#"><i class="fas fa-map-marker-alt"></i> Made By Дарья Кувшинова, 2025 ©</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="copyright">
+            <p>© 2025 Библиотека Онлайн. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script>
+// ============================================
+// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И СОСТОЯНИЕ
+// ============================================
+
+let allBooks = [];           // Все книги с сервера
+let filteredBooks = [];      // Отфильтрованные книги для отображения
+let currentFilter = 'all';   // Текущий фильтр
+let currentSearch = '';      // Текущий поисковый запрос
+let currentPage = 1;         // Текущая страница
+const booksPerPage = 6;      // Книг на страницу
+
+// ============================================
+// ОСНОВНАЯ ФУНКЦИЯ ЗАГРУЗКИ КНИГ С СЕРВЕРА
+// ============================================
+
+async function loadBooksFromServer() {
+    try {
+        // Показываем индикатор загрузки
+        showLoading(true);
+
+        // Делаем запрос к Flask API
+        const response = await fetch('/api/books');
+
+        if (!response.ok) {
+            throw new Error(`Ошибка сервера: ${response.status}`);
+        }
+
+        // Получаем данные из ответа (JSON)
+        allBooks = await response.json();
+
+        console.log(`Загружено ${allBooks.length} книг с сервера`);
+
+        // После успешной загрузки применяем фильтры и отображаем
+        applyFiltersAndDisplay();
+
+    } catch (error) {
+        console.error('Ошибка при загрузке книг:', error);
+        showError('Не удалось загрузить книги с сервера. Попробуйте перезагрузить страницу.');
+
+        // Показываем состояние ошибки
+        displayErrorState();
+
+    } finally {
+        // Скрываем индикатор загрузки в любом случае
+        showLoading(false);
+    }
+}
+
+// ============================================
+// ФИЛЬТРАЦИЯ И ОТОБРАЖЕНИЕ
+// ============================================
+
+function applyFiltersAndDisplay() {
+    // 1. Применяем текстовый поиск
+    let result = allBooks;
+
+    if (currentSearch.trim() !== '') {
+        const searchLower = currentSearch.toLowerCase();
+        result = result.filter(book => {
+            return (
+                (book.title && book.title.toLowerCase().includes(searchLower)) ||
+                (book.author && book.author.toLowerCase().includes(searchLower)) ||
+                (book.publisher && book.publisher.toLowerCase().includes(searchLower)) ||
+                (book.genre && book.genre.toLowerCase().includes(searchLower)) ||
+                (book.year && book.year.toString().includes(searchLower))
+            );
+        });
+    }
+
+    // 2. Применяем выбранный фильтр
+    if (currentFilter === 'available') {
+        result = result.filter(book => book.is_available === true);
+    } else if (currentFilter === 'popular') {
+        // Простая логика: книги с малым количеством доступных копий
+        result = result.filter(book => book.available_copies < 3);
+    } else if (currentFilter === 'new') {
+        const currentYear = new Date().getFullYear();
+        result = result.filter(book => book.year >= currentYear - 2);
+    }
+
+    // 3. Сохраняем отфильтрованные книги
+    filteredBooks = result;
+
+    // 4. Обновляем счетчик
+    updateResultsCount(filteredBooks.length);
+
+    // 5. Показываем книги (с пагинацией)
+    displayBooksWithPagination();
+}
+
+// ============================================
+// ОТОБРАЖЕНИЕ КНИГ С ПАГИНАЦИЕЙ
+// ============================================
+
+function displayBooksWithPagination() {
+    const booksGrid = document.getElementById('booksGrid');
+    const noResults = document.getElementById('noResults');
+
+    // Проверяем, есть ли книги для отображения
+    if (!filteredBooks || filteredBooks.length === 0) {
+        booksGrid.style.display = 'none';
+        noResults.style.display = 'block';
+        document.getElementById('pagination').style.display = 'none';
+        return;
+    }
+
+    // Показываем сетку
+    booksGrid.style.display = 'grid';
+    noResults.style.display = 'none';
+    booksGrid.innerHTML = '';
+
+    // Рассчитываем, какие книги показывать на текущей странице
+    const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+    const startIndex = (currentPage - 1) * booksPerPage;
+    const endIndex = Math.min(startIndex + booksPerPage, filteredBooks.length);
+    const booksToShow = filteredBooks.slice(startIndex, endIndex);
+
+    // Создаем карточки для каждой книги
+    booksToShow.forEach(book => {
+        const bookCard = createBookCard(book);
+        booksGrid.appendChild(bookCard);
+    });
+
+    // Обновляем пагинацию
+    updatePagination(totalPages);
+}
+
+// ============================================
+// СОЗДАНИЕ КАРТОЧКИ КНИГИ
+// ============================================
+
+function createBookCard(book) {
+    const card = document.createElement('div');
+    card.className = 'book-card';
+    card.dataset.id = book.id;
+
+    // Определяем цвет по жанру
+    const bgColor = getGenreColor(book.genre);
+
+    // Создаем бейджи статуса
+    let badges = '';
+    if (book.is_available === false || book.available_copies === 0) {
+        badges = '<div class="book-badge" style="background-color: #ef4444;">Нет в наличии</div>';
+    } else if (book.available_copies === 1) {
+        badges = '<div class="book-badge" style="background-color: #f59e0b;">Осталась 1</div>';
+    } else if (book.available_copies < 3) {
+        badges = '<div class="book-badge" style="background-color: #3b82f6;">Мало осталось</div>';
+    }
+
+    // Добавляем всплывающую подсказку с описанием, если есть
+    const descriptionAttr = book.description ? `title="${book.description}"` : '';
+
+    card.innerHTML = `
+        <div class="book-image" style="background-color: ${bgColor}20; color: ${bgColor};" ${descriptionAttr}>
+            ${book.cover_image ?
+                `<img src="${book.cover_image}" alt="${book.title}" loading="lazy">` :
+                `<i class="fas fa-book"></i>`
+            }
+            ${badges}
+        </div>
+        <div class="book-info">
+            <h3 class="book-title">${escapeHtml(book.title || 'Без названия')}</h3>
+            <p class="book-author">${escapeHtml(book.author || 'Автор не указан')}</p>
+
+            <div class="book-details">
+                <div class="book-detail">
+                    <span class="detail-label">Год издания</span>
+                    <span class="detail-value">${book.year || 'Не указан'}</span>
+                </div>
+                <div class="book-detail">
+                    <span class="detail-label">Издательство</span>
+                    <span class="detail-value">${escapeHtml(book.publisher || 'Не указано')}</span>
+                </div>
+                <div class="book-detail">
+                    <span class="detail-label">Жанр</span>
+                    <span class="detail-value">${escapeHtml(book.genre || 'Не указан')}</span>
+                </div>
+                <div class="book-detail">
+                    <span class="detail-label">Доступно</span>
+                    <span class="detail-value">${book.available_copies || 0} из ${book.total_copies || 0}</span>
+                </div>
+            </div>
+
+            <div class="book-actions">
+
+                <button class="action-btn btn-save" onclick="handleSaveBook(${book.id})">
+                    <i class="fas fa-bookmark"></i> Зарезервировать
+                </button>
+            </div>
+        </div>
+    `;
+
+    return card;
+}
+
+// ============================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ============================================
+
+// Получение цвета по жанру книги
+function getGenreColor(genre) {
+    if (!genre) return '#38bdf8';
+
+    const genreMap = {
+        'роман': '#3b82f6',
+        'детектив': '#ef4444',
+        'фэнтези': '#10b981',
+        'фантастика': '#8b5cf6',
+        'антиутопия': '#dc2626',
+        'классика': '#f59e0b',
+        'исторический': '#6366f1',
+        'биография': '#ec4899',
+        'поэзия': '#d946ef',
+        'драма': '#14b8a6',
+        'приключения': '#f97316',
+        'ужасы': '#991b1b',
+        'научная литература': '#0891b2'
+    };
+
+    const genreLower = genre.toLowerCase();
+    return genreMap[genreLower] || '#38bdf8';
+}
+
+// Экранирование HTML для безопасности
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Обновление счетчика результатов
+function updateResultsCount(count) {
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        resultsCount.textContent = count;
+    }
+}
+
+// Обновление пагинации
+function updatePagination(totalPages) {
+    const pagination = document.getElementById('pagination');
+
+    if (totalPages <= 1) {
+        pagination.style.display = 'none';
+        return;
+    }
+
+    pagination.style.display = 'flex';
+    pagination.innerHTML = '';
+
+    // Кнопка "Назад"
+    const prevBtn = document.createElement('button');
+    prevBtn.className = `page-btn ${currentPage === 1 ? 'disabled' : ''}`;
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            displayBooksWithPagination();
+        }
+    });
+    pagination.appendChild(prevBtn);
+
+    // Номера страниц
+    const maxVisiblePages = 3;
+    let startPage = Math.max(1, currentPage - 1);
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+        pageBtn.textContent = i;
+        pageBtn.addEventListener('click', () => {
+            currentPage = i;
+            displayBooksWithPagination();
+        });
+        pagination.appendChild(pageBtn);
+    }
+
+    // Кнопка "Вперед"
+    const nextBtn = document.createElement('button');
+    nextBtn.className = `page-btn ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            displayBooksWithPagination();
+        }
+    });
+    pagination.appendChild(nextBtn);
+}
+
+// Показать/скрыть индикатор загрузки
+function showLoading(show) {
+    const loadingEl = document.getElementById('loading');
+    if (loadingEl) {
+        loadingEl.style.display = show ? 'block' : 'none';
+    }
+}
+
+// Показать ошибку
+function showError(message) {
+    // Можно заменить на красивый попап
+    console.error(message);
+
+    // Простой алерт для демонстрации
+    const errorDiv = document.getElementById('errorMessage');
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+
+        // Автоскрытие через 5 секунд
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
+}
+
+// Отображение состояния ошибки
+function displayErrorState() {
+    const booksGrid = document.getElementById('booksGrid');
+    const noResults = document.getElementById('noResults');
+
+    booksGrid.style.display = 'none';
+    noResults.style.display = 'block';
+
+    // Меняем текст в блоке "нет результатов"
+    noResults.innerHTML = `
+        <div class="no-results-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3>Ошибка загрузки</h3>
+        <p>Не удалось загрузить книги с сервера. Проверьте подключение к интернету или попробуйте позже.</p>
+        <button onclick="loadBooksFromServer()" style="margin-top: 20px; padding: 10px 20px;
+               background-color: #38bdf8; color: white; border: none; border-radius: 8px;
+               cursor: pointer; font-weight: 600;">
+            <i class="fas fa-redo"></i> Попробовать снова
+        </button>
+    `;
+}
+
+// ============================================
+// ОБРАБОТЧИКИ ДЕЙСТВИЙ С КНИГАМИ
+// ============================================
+
+// Взять книгу для чтения
+async function handleReadBook(bookId) {
+    try {
+        const book = allBooks.find(b => b.id === bookId);
+
+        if (!book || !book.is_available) {
+            alert('Книга недоступна для чтения');
+            return;
+        }
+
+        // Запрос к серверу для взятия книги
+        const response = await fetch(`/api/books/${bookId}/loan`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin' // Для передачи сессии/куки
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(`Книга "${book.title}" успешно взята! Дата возврата: ${result.due_date}`);
+            // Обновляем список книг
+            loadBooksFromServer();
+        } else {
+            alert(result.error || 'Ошибка при взятии книги');
+        }
+
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка при взятии книги. Проверьте подключение к серверу.');
+    }
+}
+
+// Зарезервировать книгу
+async function handleSaveBook(bookId) {
+    try {
+        const book = allBooks.find(b => b.id === bookId);
+
+        if (!book) {
+            alert('Книга не найдена');
+            return;
+        }
+
+        // Запрос к серверу для резервирования
+        const response = await fetch(`/api/books/${bookId}/reserve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(`Книга "${book.title}" зарезервирована!`);
+        } else {
+            alert(result.error || 'Ошибка при резервировании');
+        }
+
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка при резервировании. Проверьте подключение к серверу.');
+    }
+}
+
+// ============================================
+// ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ СОБЫТИЙ
+// ============================================
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Страница каталога загружена, начинаем загрузку книг...');
+
+    // Загружаем книги с сервера
+    loadBooksFromServer();
+
+    // Настройка поиска (с задержкой)
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentSearch = this.value;
+            currentPage = 1; // Сбрасываем на первую страницу
+            applyFiltersAndDisplay();
+        }, 300); // Задержка 300мс для уменьшения запросов
+    });
+
+    // Настройка фильтров
+    document.querySelectorAll('.filter-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Снимаем активность со всех кнопок
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Активируем текущую кнопку
+            this.classList.add('active');
+
+            // Обновляем фильтр и перерисовываем
+            currentFilter = this.dataset.filter;
+            currentPage = 1; // Сбрасываем на первую страницу
+            applyFiltersAndDisplay();
+        });
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подтверждение удаления | Библиотека</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/delete.css') }}"/>
+</head>
+<body>
+    <div class="container">
+        <div class="warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <div class="confirmation-card">
+            <h1>Вы уверены, что хотите удалить учетную запись?</h1>
+
+            <p class="warning-text">
+                Это действие невозможно отменить. Все ваши данные будут безвозвратно удалены.
+            </p>
+
+            <div class="consequences">
+                <h3><i class="fas fa-ban"></i> После удаления вы потеряете:</h3>
+                <ul>
+                    <li>Историю чтения и рецензии</li>
+                    <li>Сохраненные закладки и избранные книги</li>
+                    <li>Статистику чтения и достижения</li>
+                    <li>Доступ к личной библиотеке</li>
+                </ul>
+            </div>
+
+            <div class="confirmation-input" id="confirmationSection">
+                <p>Для подтверждения введите слово <strong>"УДАЛИТЬ"</strong></p>
+                <input type="text" id="confirmationInput" placeholder="Введите УДАЛИТЬ" autocomplete="off">
+                <p id="confirmationHint" style="margin-top: 10px; font-size: 0.9rem; color: #64748b;">
+                    Напишите слово заглавными буквами как показано выше
+                </p>
+            </div>
+
+            <div class="button-group">
+                <a class="btn btn-no" href="profile">
+                    <i class="fas fa-times"></i> Нет, отменить
+                </a>
+                <a class="btn btn-yes" href="confirm_delete_npS6Kab9Y">
+                    <i class="fas fa-trash-alt"></i> Да, удалить
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Если вы не хотите удалять аккаунт, но у вас возникли проблемы, <br>
+            <a href="#"><i class="fas fa-headset"></i> обратитесь в службу поддержки</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Элементы DOM
+        const cancelBtn = document.getElementById('cancelBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const confirmationInput = document.getElementById('confirmationInput');
+        const confirmationHint = document.getElementById('confirmationHint');
+        const confirmationSection = document.getElementById('confirmationSection');
+
+        // Флаг для дополнительного подтверждения
+        let needsAdditionalConfirmation = true;
+
+        // Обработка ввода подтверждения
+        confirmationInput.addEventListener('input', function() {
+            const inputValue = this.value.trim();
+
+            if (inputValue === 'УДАЛИТЬ') {
+                // Правильный ввод
+                confirmBtn.disabled = false;
+                confirmationInput.style.borderColor = '#10b981';
+                confirmationInput.style.backgroundColor = '#f0fdf4';
+                confirmationHint.textContent = '✓ Подтверждение получено';
+                confirmationHint.style.color = '#10b981';
+                needsAdditionalConfirmation = false;
+            } else if (inputValue === '') {
+                // Пустой ввод
+                confirmBtn.disabled = true;
+                confirmationInput.style.borderColor = '#e2e8f0';
+                confirmationInput.style.backgroundColor = '#f8fafc';
+                confirmationHint.textContent = 'Напишите слово заглавными буквами как показано выше';
+                confirmationHint.style.color = '#64748b';
+                needsAdditionalConfirmation = true;
+            } else {
+                // Неправильный ввод
+                confirmBtn.disabled = true;
+                confirmationInput.style.borderColor = '#ef4444';
+                confirmationInput.style.backgroundColor = '#fef2f2';
+                confirmationHint.textContent = 'Неправильный текст подтверждения';
+                confirmationHint.style.color = '#ef4444';
+                needsAdditionalConfirmation = true;
+
+                // Анимация "тряски" при неверном вводе
+                if (inputValue.length === 6) {
+                    confirmationInput.classList.add('shake');
+                    setTimeout(() => {
+                        confirmationInput.classList.remove('shake');
+                    }, 500);
+                }
+            }
+        });
+
+        // Обработка нажатия клавиш
+        confirmationInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !confirmBtn.disabled) {
+                handleConfirmation();
+            }
+        });
+
+        // Кнопка "Нет" - возврат на страницу профиля
+        cancelBtn.addEventListener('click', function() {
+            // В реальном приложении здесь был бы редирект на страницу профиля
+            // window.location.href = 'profile.html';
+
+            // Для демонстрации показываем сообщение
+            alert('Действие отменено. Возврат на страницу профиля...');
+
+            // Эффект нажатия кнопки
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+        });
+
+        // Кнопка "Да" - подтверждение удаления
+        confirmBtn.addEventListener('click', handleConfirmation);
+
+        // Функция обработки подтверждения удаления
+        function handleConfirmation() {
+            if (needsAdditionalConfirmation) {
+                alert('Пожалуйста, введите "УДАЛИТЬ" для подтверждения.');
+                confirmationInput.focus();
+                return;
+            }
+
+            // Показать финальное предупреждение
+            const finalConfirmation = confirm(
+                'ПОСЛЕДНЕЕ ПРЕДУПРЕЖДЕНИЕ!\n\n' +
+                'Ваша учетная запись и все данные будут безвозвратно удалены.\n' +
+                'Это действие невозможно отменить.\n\n' +
+                'Вы уверены, что хотите продолжить?'
+            );
+
+            if (finalConfirmation) {
+                // В реальном приложении здесь был бы AJAX-запрос к серверу
+
+                // Блокируем кнопки
+                confirmBtn.disabled = true;
+                cancelBtn.disabled = true;
+
+                // Показываем индикатор загрузки
+                const originalText = confirmBtn.innerHTML;
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Удаление...';
+
+                // Имитация процесса удаления
+                setTimeout(() => {
+                    alert('Учетная запись успешно удалена. Спасибо, что были с нами!');
+
+                    // В реальном приложении здесь был бы редирект на главную страницу
+                    // window.location.href = 'index.html';
+
+                    // Для демонстрации показываем финальное сообщение
+                    document.body.innerHTML = `
+                        <div class="container">
+                            <div class="warning-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="confirmation-card">
+                                <h1 style="color: #065f46;">Учетная запись удалена</h1>
+                                <p style="color: #047857; margin: 20px 0 30px;">
+                                    Все ваши данные были успешно удалены из системы.<br>
+                                    Надеемся увидеть вас снова!
+                                </p>
+                                <a href="index.html" style="display: inline-block; padding: 12px 30px;
+                                   background-color: #3b82f6; color: white; text-decoration: none;
+                                   border-radius: 10px; font-weight: 600; margin-top: 20px;">
+                                    <i class="fas fa-home"></i> На главную страницу
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }, 2000);
+            }
+
+            // Эффект нажатия кнопки
+            confirmBtn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                confirmBtn.style.transform = 'scale(1)';
+            }, 150);
+        }
+
+        // Фокус на поле ввода при загрузке страницы
+        window.addEventListener('load', function() {
+            confirmationInput.focus();
+        });
+
+        // Предотвращение случайного закрытия страницы
+        window.addEventListener('beforeunload', function(e) {
+            if (!needsAdditionalConfirmation) {
+                e.preventDefault();
+                e.returnValue = 'Вы ввели подтверждение для удаления аккаунта. Вы уверены, что хотите уйти?';
+                return e.returnValue;
+            }
+        });
+    </script>
+</body>
+</html>
