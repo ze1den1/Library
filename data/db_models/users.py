@@ -15,7 +15,19 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     birthday = sa.Column(sa.Date)
     hashed_password = sa.Column(sa.String)
     salt = sa.Column(sa.String)
-    admin = sa.Column(sa.Integer, default=0)
+    is_admin = sa.Column(sa.Integer, default=0)
+    is_active = sa.Column(sa.Integer, default=1)
+    created_at = sa.Column(sa.DateTime)
 
-    loans = orm.relationship('Loan', back_populates='user', cascade="all, delete-orphan")
-    reservations = orm.relationship('Reservation', back_populates='user', cascade="all, delete-orphan")
+    loans = orm.relationship('Loan', backref='reader', cascade="all, delete-orphan")
+    reservations = orm.relationship('Reservation', backref='reader', cascade="all, delete-orphan")
+
+    @property
+    def active_loans(self):
+        """Активные выдачи книг"""
+        return [loan for loan in self.loans if loan.status in ['active', 'overdue']]
+
+    @property
+    def overdue_loans(self):
+        """Просроченные книги"""
+        return [loan for loan in self.loans if loan.status == 'overdue']

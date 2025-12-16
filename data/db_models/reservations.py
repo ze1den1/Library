@@ -10,6 +10,9 @@ from .users import User
 
 class Reservation(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'reservation'
+    __table_args__ = (
+        sa.UniqueConstraint('reader_id', 'book_id', name='unique_user_book_reservation'),
+    )
 
     id = sa.Column(sa.Integer,
                    primary_key=True, autoincrement=True)
@@ -17,6 +20,3 @@ class Reservation(SqlAlchemyBase, SerializerMixin):
     book_id = sa.Column(sa.Integer, sa.ForeignKey(Book.id))
     reservation_date = sa.Column(sa.Date)
     status = sa.Column(sa.String)
-
-    user = orm.relationship('User')
-    book = orm.relationship('Book')

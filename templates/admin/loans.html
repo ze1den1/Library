@@ -1,0 +1,224 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Управление выдачами книг{% endblock %}
+
+{% block content %}
+    <!-- Фильтры и поиск -->
+    <div class="filter-buttons">
+        <a href="{{ url_for('admin_loans', status='all') }}" 
+           class="filter-btn {% if status_filter == 'all' %}active{% endif %}">
+            Все ({{ all_loans['total'] }})
+        </a>
+        <a href="{{ url_for('admin_loans', status='active') }}" 
+           class="filter-btn {% if status_filter == 'active' %}active{% endif %}">
+            Активные
+        </a>
+        <a href="{{ url_for('admin_loans', status='overdue') }}" 
+           class="filter-btn {% if status_filter == 'overdue' %}active{% endif %}">
+            Просроченные
+        </a>
+        <a href="{{ url_for('admin_loans', status='returned') }}" 
+           class="filter-btn {% if status_filter == 'returned' %}active{% endif %}">
+            Возвращенные
+        </a>
+        <a href="{{ url_for('admin_create_loan') }}" class="btn btn-success" style="margin-left: auto;">
+            <i class="fas fa-plus"></i> Новая выдача
+        </a>
+    </div>
+
+    <!-- Таблица выдач -->
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-book-open"></i> Выдачи книг</h2>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Читатель</th>
+                        <th>Книга</th>
+                        <th>Автор</th>
+                        <th>Дата выдачи</th>
+                        <th>Вернуть до</th>
+                        <th>Статус</th>
+                        <th>Дней осталось</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in loans['items'] %}
+                    <tr>
+                        <td>#{{ loan.id }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_user_detail', user_id=loan.reader.id) }}" 
+                               style="color: #3b82f6; text-decoration: none;">
+                                {{ loan.reader.full_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_book_detail', book_id=loan.book.id) }}" 
+                               style="color: #3b82f6; text-decoration: none;">
+                                {{ loan.book.title }}
+                            </a>
+                        </td>
+                        <td>{{ loan.book.author }}</td>
+                        <td>{{ loan.loan_date.strftime('%d.%m.%Y') }}</td>
+                        <td>
+                            {% if loan.due_date %}
+                                {{ loan.due_date.strftime('%d.%m.%Y') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if loan.status == 'active' %}
+                                <span class="status-badge status-active">Активна</span>
+                            {% elif loan.status == 'overdue' %}
+                                <span class="status-badge status-overdue">Просрочена</span>
+                            {% elif loan.status == 'returned' %}
+                                <span class="status-badge status-returned">Возвращена</span>
+                            {% elif loan.status == 'cancelled' %}
+                                <span class="status-badge status-cancelled">Отменена</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if loan.status in ['active', 'overdue'] and loan.due_date %}
+                                {% set days_left = (loan.due_date - datetime.now().date()).days %}
+                                {% if days_left > 0 %}
+                                    <span style="color: #10b981; font-weight: 600;">{{ days_left }}</span>
+                                {% elif days_left == 0 %}
+                                    <span style="color: #f59e0b; font-weight: 600;">Сегодня</span>
+                                {% else %}
+                                    <span style="color: #ef4444; font-weight: 600;">{{ -days_left }} д. назад</span>
+                                {% endif %}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                {% if loan.status in ['active', 'overdue'] %}
+                                <form action="{{ url_for('admin_return_loan', loan_id=loan.id) }}"
+                                      method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-success" style="padding: 5px 10px;"
+                                            title="Отметить как возвращенную">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                <a href="{{ url_for('admin_loan_detail', loan_id=loan.id) }}"
+                                   class="btn btn-outline" style="padding: 5px 10px;" title="Подробнее">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                
+                                {% if loan.status in ['active', 'overdue'] %}
+                                <button class="btn btn-outline" style="padding: 5px 10px;" 
+                                        onclick="extendLoan({{ loan.id }})" title="Продлить">
+                                    <i class="fas fa-calendar-plus"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        {% if loans['total_pages'] > 1 %}
+        <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            {% if loans['has_prev'] %}
+                <a href="{{ url_for('admin_loans', page=loans['prev_num'], status=status_filter) }}"
+                   class="btn btn-outline">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% endif %}
+
+            {% for page_num in loans['iter_pages'] %}
+                {% if page_num %}
+                    {% if page_num == loans['page'] %}
+                        <span class="btn btn-primary">{{ page_num }}</span>
+                    {% else %}
+                        <a href="{{ url_for('admin_loans', page=page_num, status=status_filter) }}" 
+                           class="btn btn-outline">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="btn btn-outline">...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if loans['has_next'] %}
+                <a href="{{ url_for('admin_loans', page=loans['next_num'], status=status_filter) }}"
+                   class="btn btn-outline">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Статистика по статусам -->
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-chart-bar"></i> Статистика по статусам</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px;">
+            {% set active_count = all_loans['items']|selectattr('status', 'equalto', 'active')|list|length %}
+            {% set overdue_count = all_loans['items']|selectattr('status', 'equalto', 'overdue')|list|length %}
+            {% set returned_count = all_loans['items']|selectattr('status', 'equalto', 'returned')|list|length %}
+            
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: #10b981;">{{ active_count }}</div>
+                <div style="color: #64748b;">Активных выдач</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: #ef4444;">{{ overdue_count }}</div>
+                <div style="color: #64748b;">Просрочено</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: #3b82f6;">{{ returned_count }}</div>
+                <div style="color: #64748b;">Возвращено</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: #475569;">{{ all_loans['total'] }}</div>
+                <div style="color: #64748b;">Всего выдач</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function extendLoan(loanId) {
+    const newDate = prompt('Введите новую дату возврата (ГГГГ-ММ-ДД):');
+    if (newDate) {
+        fetch(`/admin/loans/${loanId}/extend`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ due_date: newDate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Ошибка продления');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ошибка при продлении');
+        });
+    }
+}
+</script>
+{% endblock %}

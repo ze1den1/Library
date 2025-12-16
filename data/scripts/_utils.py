@@ -1,9 +1,17 @@
+import hashlib
+import random
+from datetime import datetime
+from string import ascii_letters, digits, ascii_uppercase, ascii_lowercase
+from random import choice, randint, shuffle
+
+import bcrypt
 from flask_wtf import FlaskForm
 from wtforms import EmailField, PasswordField, BooleanField, SubmitField, StringField, DateField
 from wtforms.validators import DataRequired
 
 from data.db_models.books import Book
 from data.db_models.db_session import create_session
+from data.db_models.users import User
 
 
 class LoginForm(FlaskForm):
@@ -42,7 +50,66 @@ class ChangePasswordForm(FlaskForm):
     submit = SubmitField('Сохранить')
 
 
-import random
+def paginate(query, page, per_page=20):
+    """Ручная реализация пагинации для SQLAlchemy запроса"""
+    total_items = query.count()
+    total_pages = (total_items + per_page - 1) // per_page
+
+    if page < 1:
+        page = 1
+    elif page > total_pages > 0:
+        page = total_pages
+
+    offset = (page - 1) * per_page
+    items = query.offset(offset).limit(per_page).all()
+
+    return {
+        'iter_pages': range(1, total_pages + 1),
+        'total': len(items),
+        'items': items,
+        'page': page,
+        'total_pages': total_pages,
+        'has_prev': page > 1,
+        'has_next': page < total_pages,
+        'prev_num': page - 1 if page > 1 else None,
+        'next_num': page + 1 if page < total_pages else None
+    }
+
+
+def create_users():
+    """Создает администратора (выполнить один раз)"""
+    session = create_session()
+
+    if session.query(User).all():
+        return ""
+
+    salt = bcrypt.gensalt()
+    hashed_pass = hashlib.md5(("admin123" + salt.decode()).encode()).digest()
+    admin_user = User(
+        full_name="Администратор Системы",
+        email="admin@library.ru",
+        birthday=datetime(1990, 1, 1).date(),
+        hashed_password=hashed_pass,
+        salt=salt,
+        is_admin=True,
+        created_at = datetime.now()
+    )
+    session.add(admin_user)
+
+    salt = bcrypt.gensalt()
+    hashed_pass = hashlib.md5(("user123" + salt.decode()).encode()).digest()
+    user = User(
+        full_name="Пользователь 1",
+        email="user@library.ru",
+        birthday=datetime(1990, 1, 1).date(),
+        hashed_password=hashed_pass,
+        salt=salt,
+        is_admin=False,
+        created_at=datetime.now()
+    )
+    session.add(user)
+    session.commit()
+    return "✅ Администратор создан: admin@library.ru / admin123"
 
 
 def populate_books_table():

@@ -1,0 +1,326 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Выдача #{{ loan.id }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 30px; margin-bottom: 30px; flex-wrap: wrap;">
+    <!-- Основная информация -->
+    <div class="card" style="flex: 2; min-width: 300px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2><i class="fas fa-book-open"></i> Детали выдачи #{{ loan.id }}</h2>
+            <a href="{{ url_for('admin_loans') }}" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Назад
+            </a>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 20px;">
+            <!-- Информация о читателе -->
+            <div>
+                <h3 style="color: #475569; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                    <i class="fas fa-user"></i> Читатель
+                </h3>
+                
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                    <div class="user-avatar" style="width: 60px; height: 60px; font-size: 1.2rem;">
+                        {{ loan.reader.full_name[0:2]|upper }}
+                    </div>
+                    <div>
+                        <h4 style="color: #1e293b; margin-bottom: 5px;">
+                            {{ loan.reader.full_name }}
+                        </h4>
+                        <p style="color: #64748b;"><i class="fas fa-envelope"></i> {{ loan.reader.email }}</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <a href="{{ url_for('admin_user_detail', user_id=loan.reader.id) }}" 
+                       class="btn btn-outline">
+                        <i class="fas fa-eye"></i> Профиль читателя
+                    </a>
+                    <a href="mailto:{{ loan.reader.email }}" class="btn btn-outline">
+                        <i class="fas fa-envelope"></i> Написать
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Информация о книге -->
+            <div>
+                <h3 style="color: #475569; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                    <i class="fas fa-book"></i> Книга
+                </h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #1e293b; margin-bottom: 5px;">{{ loan.book.title }}</h4>
+                    <p style="color: #64748b; margin-bottom: 10px;"><i class="fas fa-user-pen"></i> {{ loan.book.author }}</p>
+                    
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                        {% if loan.book.genre %}
+                        <span class="status-badge" style="background-color: #e0f2fe; color: #0369a1;">
+                            {{ loan.book.genre }}
+                        </span>
+                        {% endif %}
+                        
+                        {% if loan.book.publication_year %}
+                        <span class="status-badge" style="background-color: #f3f4f6; color: #4b5563;">
+                            {{ loan.book.publication_year }} год
+                        </span>
+                        {% endif %}
+                        
+                        {% if loan.book.location %}
+                        <span class="status-badge" style="background-color: #fef3c7; color: #92400e;">
+                            {{ loan.book.location }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <a href="{{ url_for('admin_book_detail', book_id=loan.book.id) }}" 
+                       class="btn btn-outline">
+                        <i class="fas fa-eye"></i> Страница книги
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Статус и действия -->
+    <div class="card" style="flex: 1; min-width: 250px;">
+        <div class="card-header">
+            <h2><i class="fas fa-cog"></i> Статус и действия</h2>
+        </div>
+        
+        <div style="padding: 20px;">
+            <!-- Статус -->
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="font-size: 2.5rem; font-weight: 700; 
+                          {% if loan.status == 'active' %}color: #10b981;
+                          {% elif loan.status == 'overdue' %}color: #ef4444;
+                          {% elif loan.status == 'returned' %}color: #3b82f6;
+                          {% endif %}">
+                    {% if loan.status == 'active' %}АКТИВНА
+                    {% elif loan.status == 'overdue' %}ПРОСРОЧЕНА
+                    {% elif loan.status == 'returned' %}ВОЗВРАЩЕНА
+                    {% endif %}
+                </div>
+                <div style="color: #64748b; margin-top: 5px;">
+                    {% if loan.status == 'active' %}Книга на руках у читателя
+                    {% elif loan.status == 'overdue' %}Требует внимания
+                    {% elif loan.status == 'returned' %}Операция завершена
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Даты -->
+            <div style="margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: #64748b;">Дата выдачи:</span>
+                    <strong>{{ loan.loan_date.strftime('%d.%m.%Y') }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: #64748b;">Вернуть до:</span>
+                    <strong>{{ loan.due_date.strftime('%d.%m.%Y') }}</strong>
+                </div>
+                {% if loan.return_date %}
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b;">Дата возврата:</span>
+                    <strong>{{ loan.return_date.strftime('%d.%m.%Y') }}</strong>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Дни -->
+            <div style="margin-bottom: 25px; padding: 15px; background-color: #f8fafc; border-radius: 8px;">
+                {% if loan.status in ['active', 'overdue'] %}
+                    {% set days_left = (loan.due_date - datetime.now().date()).days %}
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 700; 
+                                  {% if days_left > 3 %}color: #10b981;
+                                  {% elif days_left > 0 %}color: #f59e0b;
+                                  {% else %}color: #ef4444;{% endif %}">
+                            {% if days_left > 0 %}
+                                {{ days_left }}
+                            {% elif days_left == 0 %}
+                                СЕГОДНЯ
+                            {% else %}
+                                {{ -days_left }}
+                            {% endif %}
+                        </div>
+                        <div style="color: #64748b;">
+                            {% if days_left > 0 %}
+                                дней осталось
+                            {% elif days_left == 0 %}
+                                последний день
+                            {% else %}
+                                дней просрочено
+                            {% endif %}
+                        </div>
+                    </div>
+                {% elif loan.status == 'returned' %}
+                    {% set days_held = (loan.return_date - loan.loan_date).days %}
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #3b82f6;">
+                            {{ days_held }}
+                        </div>
+                        <div style="color: #64748b;">дней на руках</div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Действия -->
+            <div>
+                {% if loan.status in ['active', 'overdue'] %}
+                <form action="{{ url_for('admin_return_loan', loan_id=loan.id) }}" method="POST">
+                    <button type="submit" class="btn btn-success" style="width: 100%; margin-bottom: 10px;">
+                        <i class="fas fa-check"></i> Отметить как возвращенную
+                    </button>
+                </form>
+                
+                <button type="button" class="btn btn-outline" style="width: 100%;" onclick="extendLoan()">
+                    <i class="fas fa-calendar-plus"></i> Продлить срок
+                </button>
+                {% endif %}
+                
+                {% if loan.status == 'returned' %}
+                <div style="text-align: center; padding: 15px; background-color: #d1fae5; 
+                      color: #065f46; border-radius: 8px; margin-top: 10px;">
+                    <i class="fas fa-check-circle"></i> Книга возвращена
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- История операций -->
+<div class="card">
+    <div class="card-header">
+        <h2><i class="fas fa-history"></i> История операций</h2>
+    </div>
+    
+    <div style="padding: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <!-- Создание выдачи -->
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 40px; height: 40px; background-color: #3b82f6; color: white; 
+                      border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1e293b;">Выдача создана</div>
+                    <div style="color: #64748b; font-size: 0.9rem;">
+                        {{ loan.loan_date.strftime('%d.%m.%Y %H:%M') }} • Администратором
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Продления (если были) -->
+            {% if loan.extensions %}
+            {% for extension in loan.extensions %}
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 40px; height: 40px; background-color: #f59e0b; color: white; 
+                      border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-calendar-plus"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1e293b;">Срок продлен</div>
+                    <div style="color: #64748b; font-size: 0.9rem;">
+                        {{ extension.date.strftime('%d.%m.%Y %H:%M') }} • До {{ extension.new_due_date.strftime('%d.%m.%Y') }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+            
+            <!-- Возврат (если был) -->
+            {% if loan.return_date %}
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 40px; height: 40px; background-color: #10b981; color: white; 
+                      border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1e293b;">Книга возвращена</div>
+                    <div style="color: #64748b; font-size: 0.9rem;">
+                        {{ loan.return_date.strftime('%d.%m.%Y %H:%M') }} • Администратором
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Связанные резервации -->
+{% if related_reservations %}
+<div class="card">
+    <div class="card-header">
+        <h2><i class="fas fa-bookmark"></i> Связанные резервации</h2>
+    </div>
+    
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Читатель</th>
+                    <th>Дата резервации</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in related_reservations %}
+                <tr>
+                    <td>{{ reservation.reader.full_name }}</td>
+                    <td>{{ reservation.reservation_date.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td>
+                        {% if reservation.status == 'pending' %}
+                            <span class="status-badge status-pending">Ожидает</span>
+                        {% elif reservation.status == 'fulfilled' %}
+                            <span class="status-badge status-active">Выполнена</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if reservation.status == 'pending' %}
+                        <div style="display: flex; gap: 5px;">
+                            <a href="{{ url_for('admin_reservations') }}" class="btn btn-outline" style="padding: 5px 10px;">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function extendLoan() {
+    const newDate = prompt('Введите новую дату возврата (ГГГГ-ММ-ДД):');
+    if (newDate) {
+        fetch(`/admin/loans/{{ loan.id }}/extend`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ due_date: newDate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Ошибка продления');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ошибка при продлении');
+        });
+    }
+}
+</script>
+{% endblock %}

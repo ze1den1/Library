@@ -1,0 +1,288 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ book.title }} - Детали книги{% endblock %}
+
+{% block content %}
+    <div style="display: flex; gap: 30px; margin-bottom: 30px; flex-wrap: wrap;">
+        <!-- Информация о книге -->
+        <div class="card" style="flex: 2; min-width: 300px;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2><i class="fas fa-book"></i> Информация о книге</h2>
+                <div>
+                    <a href="{{ url_for('admin_edit_book', book_id=book.id) }}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <a href="{{ url_for('admin_books') }}" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i> Назад
+                    </a>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 30px; margin-bottom: 25px; flex-wrap: wrap;">
+                <!-- Обложка книги -->
+                <div style="flex-shrink: 0;">
+                    <div style="width: 180px; height: 250px; background: linear-gradient(135deg, #38bdf8, #0ea5e9); 
+                          display: flex; align-items: center; justify-content: center; color: white; 
+                          border-radius: 8px; font-size: 3rem;">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+                
+                <!-- Детали книги -->
+                <div style="flex: 1; min-width: 300px;">
+                    <h3 style="font-size: 1.8rem; color: #1e293b; margin-bottom: 15px;">{{ book.title }}</h3>
+                    
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px 20px; margin-bottom: 20px;">
+                        <div style="color: #64748b; font-weight: 500;">Автор:</div>
+                        <div style="color: #1e293b; font-weight: 600;">{{ book.author }}</div>
+                        
+                        <div style="color: #64748b; font-weight: 500;">Жанр:</div>
+                        <div>
+                            <span class="status-badge" style="background-color: #e0f2fe; color: #0369a1;">
+                                {{ book.genre or 'Не указан' }}
+                            </span>
+                        </div>
+                        
+                        <div style="color: #64748b; font-weight: 500;">Год издания:</div>
+                        <div>{{ book.publication_year or 'Не указан' }}</div>
+                        
+                        <div style="color: #64748b; font-weight: 500;">Издательство:</div>
+                        <div>{{ book.publisher or 'Не указано' }}</div>
+                        
+                        <div style="color: #64748b; font-weight: 500;">Локация:</div>
+                        <div>
+                            {% if book.location %}
+                                <span class="status-badge" style="background-color: #f3f4f6; color: #4b5563;">
+                                    {{ book.location }}
+                                </span>
+                            {% else %}
+                                Не указана
+                            {% endif %}
+                        </div>
+                        
+                        <div style="color: #64748b; font-weight: 500;">Копии:</div>
+                        <div>
+                            <span style="font-weight: 600; color: #1e293b;">{{ book.available_copies }} из {{ book.total_copies }}</span>
+                            {% if book.available_copies > 0 %}
+                                <span class="status-badge status-active" style="margin-left: 10px;">Доступна</span>
+                            {% else %}
+                                <span class="status-badge status-overdue" style="margin-left: 10px;">Нет в наличии</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if book.description %}
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                        <div style="color: #64748b; font-weight: 500; margin-bottom: 10px;">Описание:</div>
+                        <div style="color: #475569; line-height: 1.6;">{{ book.description }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Быстрые действия -->
+        <div class="card" style="flex: 1; min-width: 250px;">
+            <div class="card-header">
+                <h2><i class="fas fa-bolt"></i> Быстрые действия</h2>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% if book.available_copies > 0 %}
+                <a href="{{ url_for('admin_create_loan') }}?book_id={{ book.id }}" class="btn btn-success">
+                    <i class="fas fa-book-open"></i> Выдать книгу
+                </a>
+                {% else %}
+                <button class="btn btn-success" disabled>
+                    <i class="fas fa-book-open"></i> Нет доступных копий
+                </button>
+                {% endif %}
+                
+                <a href="{{ url_for('catalog') }}?search={{ book.title|urlencode }}" class="btn btn-outline" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> На сайте
+                </a>
+                
+                <form action="{{ url_for('admin_delete_book', book_id=book.id) }}" method="POST" style="margin-top: auto;">
+                    <button type="submit" class="btn btn-danger" style="width: 100%;" 
+                            onclick="return confirm('Удалить книгу «{{ book.title }}»? Все связанные выдачи и резервации будут удалены.')">
+                        <i class="fas fa-trash"></i> Удалить книгу
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Активные выдачи этой книги -->
+    {% if active_loans %}
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-book-open"></i> Активные выдачи этой книги</h2>
+        </div>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Читатель</th>
+                        <th>Дата выдачи</th>
+                        <th>Вернуть до</th>
+                        <th>Статус</th>
+                        <th>Дней осталось</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in active_loans %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('admin_user_detail', user_id=loan.reader.id) }}" 
+                               style="color: #3b82f6; text-decoration: none;">
+                                {{ loan.reader.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ loan.loan_date.strftime('%d.%m.%Y') }}</td>
+                        <td>{{ loan.due_date.strftime('%d.%m.%Y') }}</td>
+                        <td>
+                            {% if loan.status == 'overdue' %}
+                                <span class="status-badge status-overdue">Просрочена</span>
+                            {% else %}
+                                <span class="status-badge status-active">Активна</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% set days_left = (loan.due_date - datetime.now().date()).days %}
+                            {% if days_left > 0 %}
+                                <span style="color: #10b981; font-weight: 600;">{{ days_left }}</span>
+                            {% elif days_left == 0 %}
+                                <span style="color: #f59e0b; font-weight: 600;">Сегодня</span>
+                            {% else %}
+                                <span style="color: #ef4444; font-weight: 600;">{{ -days_left }} д. назад</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('admin_return_loan', loan_id=loan.id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-success" style="padding: 5px 10px;">
+                                    <i class="fas fa-check"></i> Вернул
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Активные резервации -->
+    {% if active_reservations %}
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-bookmark"></i> Активные резервации этой книги</h2>
+        </div>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Читатель</th>
+                        <th>Дата резервации</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reservation in active_reservations %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('admin_user_detail', user_id=reservation.reader.id) }}" 
+                               style="color: #3b82f6; text-decoration: none;">
+                                {{ reservation.reader.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ reservation.reservation_date.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td><span class="status-badge status-pending">Ожидает</span></td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <form action="{{ url_for('admin_fulfill_reservation', reservation_id=reservation.id) }}" 
+                                      method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-success" style="padding: 5px 10px;">
+                                        <i class="fas fa-check"></i> Выдать
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('admin_cancel_reservation', reservation_id=reservation.id) }}" 
+                                      method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger" style="padding: 5px 10px;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- История выдач -->
+    {% if loan_history %}
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-history"></i> История выдач</h2>
+        </div>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Читатель</th>
+                        <th>Дата выдачи</th>
+                        <th>Дата возврата</th>
+                        <th>Статус</th>
+                        <th>Дней на руках</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in loan_history %}
+                    <tr>
+                        <td>{{ loan.reader.full_name }}</td>
+                        <td>{{ loan.loan_date.strftime('%d.%m.%Y') }}</td>
+                        <td>
+                            {% if loan.return_date %}
+                                {{ loan.return_date.strftime('%d.%m.%Y') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if loan.status == 'returned' %}
+                                <span class="status-badge status-returned">Возвращена</span>
+                            {% elif loan.status == 'cancelled' %}
+                                <span class="status-badge status-cancelled">Отменена</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if loan.return_date and loan.loan_date %}
+                                {{ (loan.return_date - loan.loan_date).days }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if not active_loans and not active_reservations and not loan_history %}
+    <div class="card" style="text-align: center; padding: 40px;">
+        <div style="font-size: 3rem; color: #94a3b8; margin-bottom: 20px;">
+            <i class="fas fa-book-open"></i>
+        </div>
+        <h3 style="color: #475569; margin-bottom: 10px;">Нет активных операций</h3>
+        <p style="color: #64748b;">У этой книги нет активных выдач, резерваций или истории.</p>
+    </div>
+    {% endif %}
+{% endblock %}

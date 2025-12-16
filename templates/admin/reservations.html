@@ -1,0 +1,207 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Управление резервациями{% endblock %}
+
+{% block content %}
+    <!-- Фильтры -->
+    <div class="filter-buttons">
+        <a href="{{ url_for('admin_reservations', status='all') }}" 
+           class="filter-btn {% if status_filter == 'all' %}active{% endif %}">
+            Все ({{ all_reservations['total'] }})
+        </a>
+        <a href="{{ url_for('admin_reservations', status='pending') }}" 
+           class="filter-btn {% if status_filter == 'pending' %}active{% endif %}">
+            Ожидающие
+        </a>
+        <a href="{{ url_for('admin_reservations', status='fulfilled') }}" 
+           class="filter-btn {% if status_filter == 'fulfilled' %}active{% endif %}">
+            Выполненные
+        </a>
+        <a href="{{ url_for('admin_reservations', status='cancelled') }}" 
+           class="filter-btn {% if status_filter == 'cancelled' %}active{% endif %}">
+            Отмененные
+        </a>
+    </div>
+
+    <!-- Таблица резерваций -->
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-bookmark"></i> Резервации книг</h2>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Читатель</th>
+                        <th>Книга</th>
+                        <th>Автор</th>
+                        <th>Дата резервации</th>
+                        <th>Статус</th>
+                        <th>Примечания</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reservation in reservations['items'] %}
+                    <tr>
+                        <td>#{{ reservation.id }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_user_detail', user_id=reservation.reader.id) }}" 
+                               style="color: #3b82f6; text-decoration: none;">
+                                {{ reservation.reader.full_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('admin_book_detail', book_id=reservation.book.id) }}" 
+                               style="color: #3b82f6; text-decoration: none;">
+                                {{ reservation.book.title }}
+                            </a>
+                        </td>
+                        <td>{{ reservation.book.author }}</td>
+                        <td>{{ reservation.reservation_date.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td>
+                            {% if reservation.status == 'pending' %}
+                                <span class="status-badge status-pending">Ожидает</span>
+                            {% elif reservation.status == 'fulfilled' %}
+                                <span class="status-badge status-active">Выполнена</span>
+                            {% elif reservation.status == 'cancelled' %}
+                                <span class="status-badge status-cancelled">Отменена</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if reservation.notes %}
+                                <span title="{{ reservation.notes }}" style="cursor: help;">
+                                    <i class="fas fa-sticky-note"></i>
+                                </span>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                {% if reservation.status == 'pending' %}
+                                <form action="{{ url_for('admin_fulfill_reservation', reservation_id=reservation.id) }}" 
+                                      method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-success" style="padding: 5px 10px;"
+                                            title="Выдать книгу">
+                                        <i class="fas fa-check"></i> Выдать
+                                    </button>
+                                </form>
+                                
+                                <button type="button" class="btn btn-danger" style="padding: 5px 10px;"
+                                        onclick="cancelReservation({{ reservation.id }})"
+                                        title="Отменить резервацию">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                                
+                                {% if reservation.status == 'fulfilled' %}
+                                <span class="btn btn-outline" style="padding: 5px 10px; cursor: default;">
+                                    <i class="fas fa-check-circle"></i> Выдана
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагинация -->
+        {% if reservations['total_pages'] > 1 %}
+        <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            {% if reservations['has_prev'] %}
+                <a href="{{ url_for('admin_reservations', page=reservations['prev_num'], status=status_filter) }}"
+                   class="btn btn-outline">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% endif %}
+
+            {% for page_num in reservations['iter_pages'] %}
+                {% if page_num %}
+                    {% if page_num == reservations['page'] %}
+                        <span class="btn btn-primary">{{ page_num }}</span>
+                    {% else %}
+                        <a href="{{ url_for('admin_reservations', page=page_num, status=status_filter) }}" 
+                           class="btn btn-outline">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                    <span class="btn btn-outline">...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if reservations['has_next'] %}
+                <a href="{{ url_for('admin_reservations', page=reservations['next_num'], status=status_filter) }}"
+                   class="btn btn-outline">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Статистика -->
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-chart-line"></i> Статистика резерваций</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px;">
+            {% set pending_count =   all_reservations['items']|selectattr('status', 'equalto', 'pending')|list|length %}
+            {% set fulfilled_count = all_reservations['items']|selectattr('status', 'equalto', 'fulfilled')|list|length %}
+            {% set cancelled_count = all_reservations['items']|selectattr('status', 'equalto', 'cancelled')|list|length %}
+
+            
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">{{ pending_count }}</div>
+                <div style="color: #64748b;">Ожидают выдачи</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: #10b981;">{{ fulfilled_count }}</div>
+                <div style="color: #64748b;">Выполнены</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: #ef4444;">{{ cancelled_count }}</div>
+                <div style="color: #64748b;">Отменены</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; font-weight: 700; color: #3b82f6;">{{ today_count }}</div>
+                <div style="color: #64748b;">Сегодня</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function cancelReservation(reservationId) {
+    const reason = prompt('Причина отмены резервации:');
+    if (reason !== null) {
+        fetch(`/admin/reservations/${reservationId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ notes: reason })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Ошибка отмены');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ошибка при отмене резервации');
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Админ-панель | Библиотека{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/admin/style.css') }}"/>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-cog"></i> <span>Админ-панель</span></h2>
+        </div>
+
+        <ul class="nav-links">
+            <li><a href="{{ url_for('admin_dashboard') }}" class="{% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i> <span>Дашборд</span>
+            </a></li>
+
+            <li><a href="{{ url_for('admin_users') }}" class="{% if request.endpoint in ['admin_users', 'admin_user_detail'] %}active{% endif %}">
+                <i class="fas fa-users"></i> <span>Пользователи</span>
+            </a></li>
+
+            <li><a href="{{ url_for('admin_loans') }}" class="{% if request.endpoint in ['admin_loans', 'admin_create_loan'] %}active{% endif %}">
+                <i class="fas fa-book-open"></i> <span>Выдачи книг</span>
+            </a></li>
+
+            <li><a href="{{ url_for('admin_reservations') }}" class="{% if request.endpoint == 'admin_reservations' %}active{% endif %}">
+                <i class="fas fa-bookmark"></i> <span>Резервации</span>
+            </a></li>
+
+            <li><a href="{{ url_for('admin_books') }}" class="{% if request.endpoint in ['admin_books', 'admin_book_detail'] %}active{% endif %}">
+                <i class="fas fa-book"></i> <span>Книги</span>
+            </a></li>
+
+            <li><a href="{{ url_for('catalog') }}">
+                <i class="fas fa-home"></i> <span>На сайт</span>
+            </a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>{% block page_title %}Админ-панель{% endblock %}</h1>
+
+            <div class="user-menu">
+                <div class="user-avatar">
+                    {{ session.get('user_name', 'АД')[0:2]|upper }}
+                </div>
+                <div>
+                    <div style="font-weight: 600;">{{ session.get('user_name', 'Администратор') }}</div>
+                    <div style="font-size: 0.9rem; color: #64748b;">Администратор</div>
+                </div>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" style="
+                        padding: 15px;
+                        margin-bottom: 20px;
+                        border-radius: 8px;
+                        {% if category == 'success' %}background-color: #d1fae5; color: #065f46; border-left: 4px solid #10b981;
+                        {% elif category == 'error' or category == 'danger' %}background-color: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444;
+                        {% elif category == 'warning' %}background-color: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b;
+                        {% else %}background-color: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6;
+                        {% endif %}
+                    ">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

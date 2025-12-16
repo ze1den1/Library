@@ -1,0 +1,133 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Редактирование: {{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2><i class="fas fa-edit"></i> Редактирование книги</h2>
+        <a href="{{ url_for('admin_book_detail', book_id=book.id) }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Назад
+        </a>
+    </div>
+    
+    <div style="padding: 20px;">
+        <form method="POST" action="{{ url_for('admin_edit_book', book_id=book.id) }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                <!-- Левая колонка -->
+                <div>
+                    <div class="form-group">
+                        <label class="form-label" for="title">Название книги *</label>
+                        <input type="text" id="title" name="title" class="form-control" 
+                               value="{{ book.title }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="author">Автор *</label>
+                        <input type="text" id="author" name="author" class="form-control" 
+                               value="{{ book.author }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="genre">Жанр</label>
+                        <input type="text" id="genre" name="genre" class="form-control" 
+                               value="{{ book.genre or '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="publisher">Издательство</label>
+                        <input type="text" id="publisher" name="publisher" class="form-control" 
+                               value="{{ book.publisher or '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="publication_year">Год издания</label>
+                        <input type="number" id="publication_year" name="publication_year" 
+                               class="form-control" value="{{ book.publication_year or '' }}"
+                               min="1000" max="{{ current_year }}">
+                    </div>
+                </div>
+                
+                <!-- Правая колонка -->
+                <div>
+                    <div class="form-group">
+                        <label class="form-label" for="total_copies">Общее количество копий *</label>
+                        <input type="number" id="total_copies" name="total_copies" class="form-control" 
+                               value="{{ book.total_copies }}" required min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="available_copies">Доступно копий *</label>
+                        <input type="number" id="available_copies" name="available_copies" class="form-control" 
+                               value="{{ book.available_copies }}" required min="0">
+                        <small style="color: #64748b; display: block; margin-top: 5px;">
+                            Не может превышать общее количество копий
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="location">Локация в библиотеке</label>
+                        <input type="text" id="location" name="location" class="form-control"
+                               pattern="[A-Z][0-9]{1,2}" value="{{ book.location or '' }}"
+                               placeholder="Например: A1, B12">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="description">Описание книги</label>
+                        <textarea id="description" name="description" class="form-control" 
+                                  rows="4">{{ book.description or '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Предупреждение о количестве копий -->
+            {% if book.available_copies > book.total_copies %}
+            <div style="margin-top: 20px; padding: 15px; background-color: #fef3c7; 
+                  border-left: 4px solid #f59e0b; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                    <div>
+                        <strong>Внимание:</strong> Доступных копий больше общего количества!
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Кнопки -->
+            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: flex-end;">
+                <a href="{{ url_for('admin_book_detail', book_id=book.id) }}" class="btn btn-outline">
+                    Отмена
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Сохранить изменения
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Валидация количества копий
+document.getElementById('total_copies').addEventListener('change', function() {
+    const total = parseInt(this.value) || 0;
+    const available = document.getElementById('available_copies');
+    const availableValue = parseInt(available.value) || 0;
+    
+    if (availableValue > total) {
+        available.value = total;
+    }
+    
+    available.max = total;
+});
+
+document.getElementById('available_copies').addEventListener('change', function() {
+    const total = parseInt(document.getElementById('total_copies').value) || 0;
+    const available = parseInt(this.value) || 0;
+    
+    if (available > total) {
+        this.value = total;
+        alert('Доступных копий не может быть больше общего количества');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,333 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Новая выдача книги{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2><i class="fas fa-book-open"></i> Выдача книги читателю</h2>
+        <a href="{{ url_for('admin_loans') }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+    
+    <div style="padding: 20px;">
+        <form method="POST" action="{{ url_for('admin_create_loan') }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                <!-- Читатель -->
+                <div>
+                    <h3 style="color: #475569; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                        <i class="fas fa-user"></i> Выбор читателя
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="user_search">Поиск читателя</label>
+                        <input type="text" id="user_search" class="form-control" 
+                               placeholder="Введите имя или email..." onkeyup="searchUsers()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="user_id">Читатель *</label>
+                        <select id="user_id" name="user_id" class="form-control" required>
+                            <option value="">Выберите читателя</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}" 
+                                    {% if request.args.get('user_id')|int == user.id %}selected{% endif %}>
+                                {{ user.full_name }} ({{ user.email }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Информация о выбранном читателе -->
+                    <div id="userInfo" style="display: none; margin-top: 20px; padding: 15px; 
+                          background-color: #f8fafc; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                            <div class="user-avatar" id="userAvatar" style="width: 40px; height: 40px;"></div>
+                            <div>
+                                <strong id="userName"></strong><br>
+                                <span style="color: #64748b; font-size: 0.9rem;" id="userEmail"></span>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem;">
+                            <div>
+                                <span style="color: #64748b;">Активных выдач:</span>
+                                <span id="userActiveLoans" style="font-weight: 600; color: #10b981;"></span>
+                            </div>
+                            <div>
+                                <span style="color: #64748b;">Просрочено:</span>
+                                <span id="userOverdueLoans" style="font-weight: 600; color: #ef4444;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Книга -->
+                <div>
+                    <h3 style="color: #475569; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                        <i class="fas fa-book"></i> Выбор книги
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="book_search">Поиск книги</label>
+                        <input type="text" id="book_search" class="form-control" 
+                               placeholder="Введите название или автора..." onkeyup="searchBooks()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="book_id">Книга *</label>
+                        <select id="book_id" name="book_id" class="form-control" required>
+                            <option value="">Выберите книгу</option>
+                            {% for book in available_books %}
+                            <option value="{{ book.id }}" 
+                                    {% if request.args.get('book_id')|int == book.id %}selected{% endif %}>
+                                {{ book.title }} ({{ book.author }})
+                                - Доступно: {{ book.available_copies }} из {{ book.total_copies }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Информация о выбранной книге -->
+                    <div id="bookInfo" style="display: none; margin-top: 20px; padding: 15px; 
+                          background-color: #f8fafc; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <strong id="bookTitle"></strong><br>
+                                <span style="color: #64748b; font-size: 0.9rem;" id="bookAuthor"></span>
+                            </div>
+                            <span class="status-badge" id="bookStatus"></span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem;">
+                            <div>
+                                <span style="color: #64748b;">Жанр:</span>
+                                <span id="bookGenre" style="font-weight: 600;"></span>
+                            </div>
+                            <div>
+                                <span style="color: #64748b;">Год:</span>
+                                <span id="bookYear" style="font-weight: 600;"></span>
+                            </div>
+                            <div>
+                                <span style="color: #64748b;">Локация:</span>
+                                <span id="bookLocation" style="font-weight: 600;"></span>
+                            </div>
+                            <div>
+                                <span style="color: #64748b;">Копий:</span>
+                                <span id="bookCopies" style="font-weight: 600;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Детали выдачи -->
+            <div style="margin-top: 30px; padding: 25px; background-color: #f0f9ff; border-radius: 8px;">
+                <h3 style="color: #475569; margin-bottom: 20px;">
+                    <i class="fas fa-calendar-alt"></i> Детали выдачи
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="loan_date">Дата выдачи</label>
+                        <input type="date" id="loan_date" name="loan_date" class="form-control" 
+                               value="{{ today }}" readonly style="background-color: #f1f5f9;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="due_date">Дата возврата *</label>
+                        <input type="date" id="due_date" name="due_date" class="form-control" 
+                               value="{{ default_due_date }}" required min="{{ today }}">
+                        <small style="color: #64748b; display: block; margin-top: 5px;">
+                            Максимальный срок: {{ max_due_date }}
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Срок выдачи</label>
+                        <div style="display: flex; gap: 10px; margin-top: 8px;">
+                            <button type="button" class="btn btn-outline" onclick="setDueDate(7)">1 неделя</button>
+                            <button type="button" class="btn btn-outline" onclick="setDueDate(14)">2 недели</button>
+                            <button type="button" class="btn btn-outline" onclick="setDueDate(30)">1 месяц</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label" for="notes">Примечания</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="2" 
+                              placeholder="Дополнительная информация о выдаче..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Кнопки -->
+            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: flex-end;">
+                <button type="reset" class="btn btn-outline">
+                    <i class="fas fa-redo"></i> Очистить
+                </button>
+                <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                    <i class="fas fa-check"></i> Подтвердить выдачу
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Данные для поиска
+const usersData = [
+    {% for user in users %}
+    {
+        id: {{ user.id }},
+        name: "{{ user.full_name }}",
+        email: "{{ user.email }}",
+        avatar: "{{ user.full_name[0:2]|upper }}",
+        activeLoans: {{ user.active_loans|default(0) }},
+        overdueLoans: {{ user.overdue_loans|default(0) }}
+    },
+    {% endfor %}
+];
+
+const booksData = [
+    {% for book in available_books %}
+    {
+        id: {{ book.id }},
+        title: "{{ book.title }}",
+        author: "{{ book.author }}",
+        genre: "{{ book.genre or '' }}",
+        year: {{ book.publication_year or 'null' }},
+        location: "{{ book.location or '' }}",
+        total: {{ book.total_copies }},
+        available: {{ book.available_copies }},
+        status: "{{ 'Доступна' if book.available_copies > 0 else 'Занята' }}"
+    },
+    {% endfor %}
+];
+
+// Поиск пользователей
+function searchUsers() {
+    const search = document.getElementById('user_search').value.toLowerCase();
+    const select = document.getElementById('user_id');
+    
+    // Показываем всех пользователей при пустом поиске
+    for (let i = 1; i < select.options.length; i++) {
+        const option = select.options[i];
+        const text = option.text.toLowerCase();
+        option.style.display = text.includes(search) ? '' : 'none';
+    }
+    
+    // Сбрасываем выбор, если текущий выбранный скрыт
+    if (select.value && select.options[select.selectedIndex].style.display === 'none') {
+        select.value = '';
+        hideUserInfo();
+    }
+}
+
+// Поиск книг
+function searchBooks() {
+    const search = document.getElementById('book_search').value.toLowerCase();
+    const select = document.getElementById('book_id');
+    
+    for (let i = 1; i < select.options.length; i++) {
+        const option = select.options[i];
+        const text = option.text.toLowerCase();
+        option.style.display = text.includes(search) ? '' : 'none';
+    }
+    
+    if (select.value && select.options[select.selectedIndex].style.display === 'none') {
+        select.value = '';
+        hideBookInfo();
+    }
+}
+
+// Показать информацию о пользователе
+document.getElementById('user_id').addEventListener('change', function() {
+    const userId = parseInt(this.value);
+    const user = usersData.find(u => u.id === userId);
+    
+    if (user) {
+        document.getElementById('userInfo').style.display = 'block';
+        document.getElementById('userAvatar').textContent = user.avatar;
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userEmail').textContent = user.email;
+        document.getElementById('userActiveLoans').textContent = user.activeLoans;
+        document.getElementById('userOverdueLoans').textContent = user.overdueLoans;
+    } else {
+        hideUserInfo();
+    }
+    checkForm();
+});
+
+// Показать информацию о книге
+document.getElementById('book_id').addEventListener('change', function() {
+    const bookId = parseInt(this.value);
+    const book = booksData.find(b => b.id === bookId);
+    
+    if (book) {
+        document.getElementById('bookInfo').style.display = 'block';
+        document.getElementById('bookTitle').textContent = book.title;
+        document.getElementById('bookAuthor').textContent = book.author;
+        document.getElementById('bookGenre').textContent = book.genre || '—';
+        document.getElementById('bookYear').textContent = book.year || '—';
+        document.getElementById('bookLocation').textContent = book.location || '—';
+        document.getElementById('bookCopies').textContent = `${book.available} из ${book.total}`;
+        
+        const statusBadge = document.getElementById('bookStatus');
+        statusBadge.textContent = book.status;
+        statusBadge.className = 'status-badge ' + (book.available > 0 ? 'status-active' : 'status-overdue');
+    } else {
+        hideBookInfo();
+    }
+    checkForm();
+});
+
+// Скрыть информацию о пользователе
+function hideUserInfo() {
+    document.getElementById('userInfo').style.display = 'none';
+}
+
+// Скрыть информацию о книге
+function hideBookInfo() {
+    document.getElementById('bookInfo').style.display = 'none';
+}
+
+// Установить дату возврата
+function setDueDate(days) {
+    const today = new Date(document.getElementById('loan_date').value);
+    const dueDate = new Date(today);
+    dueDate.setDate(dueDate.getDate() + days);
+    
+    const formatted = dueDate.toISOString().split('T')[0];
+    document.getElementById('due_date').value = formatted;
+}
+
+// Проверить, можно ли отправить форму
+function checkForm() {
+    const userId = document.getElementById('user_id').value;
+    const bookId = document.getElementById('book_id').value;
+    const dueDate = document.getElementById('due_date').value;
+    const submitBtn = document.getElementById('submitBtn');
+    
+    submitBtn.disabled = !(userId && bookId && dueDate);
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', function() {
+    // Триггерим события изменения для предзаполненных полей
+    if (document.getElementById('user_id').value) {
+        document.getElementById('user_id').dispatchEvent(new Event('change'));
+    }
+    if (document.getElementById('book_id').value) {
+        document.getElementById('book_id').dispatchEvent(new Event('change'));
+    }
+    
+    // Проверяем форму при изменении даты
+    document.getElementById('due_date').addEventListener('change', checkForm);
+    
+    // Устанавливаем минимальную дату возврата
+    const today = new Date(document.getElementById('loan_date').value);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('due_date').min = tomorrow.toISOString().split('T')[0];
+});
+</script>
+{% endblock %}

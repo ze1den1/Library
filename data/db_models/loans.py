@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import sqlalchemy as sa
 from flask_login import UserMixin
 from sqlalchemy import orm
@@ -20,5 +22,20 @@ class Loan(SqlAlchemyBase, SerializerMixin):
     return_date = sa.Column(sa.Date)
     status = sa.Column(sa.String)
 
-    user = orm.relationship('User')
-    book = orm.relationship('Book')
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.due_date:
+            self.due_date = datetime.now() + timedelta(days=14)
+
+    @property
+    def is_overdue(self):
+        if self.status in ['returned', 'cancelled']:
+            return False
+        return datetime.now() > self.due_date
+
+    def check_overdue(self):
+        """Проверяет, просрочена ли книга"""
+        if self.is_overdue and self.status == 'active':
+            self.status = 'overdue'
+            return True
+        return False

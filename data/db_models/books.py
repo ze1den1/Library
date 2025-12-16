@@ -17,7 +17,18 @@ class Book(SqlAlchemyBase, SerializerMixin):
     publication_year = sa.Column(sa.Integer)
     total_copies = sa.Column(sa.Integer)
     available_copies = sa.Column(sa.Integer)
+    reserved_copies = sa.Column(sa.Integer, default=0)
     location = sa.Column(sa.String)
 
-    loans = orm.relationship('Loan', back_populates='book')
-    reservations = orm.relationship('Reservation', back_populates='book')
+    loans = orm.relationship('Loan', backref='book', lazy=True, order_by='desc(Loan.loan_date)')
+    reservations = orm.relationship('Reservation', backref='book', lazy=True,
+                                    order_by='desc(Reservation.reservation_date)')
+
+    @property
+    def is_available(self):
+        return self.available_copies > 0
+
+    @property
+    def active_reservations(self):
+        """Активные резервации книги"""
+        return [res for res in self.reservations if res.status == 'pending']

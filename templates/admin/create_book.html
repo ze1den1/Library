@@ -1,0 +1,351 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Добавление новой книги{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2><i class="fas fa-plus"></i> Добавление новой книги</h2>
+        <a href="{{ url_for('admin_books') }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+    
+    <div style="padding: 20px;">
+        <form method="POST" action="{{ url_for('admin_create_book') }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                <!-- Левая колонка: Основная информация -->
+                <div>
+                    <h3 style="color: #475569; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                        <i class="fas fa-info-circle"></i> Основная информация
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="title">Название книги *</label>
+                        <input type="text" id="title" name="title" class="form-control" required 
+                               placeholder="Введите название книги">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="author">Автор *</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="author" name="author" class="form-control" 
+                                   list="authors-list" required placeholder="Введите автора">
+                            <datalist id="authors-list">
+                                {% for author in popular_authors %}
+                                <option value="{{ author }}">
+                                {% endfor %}
+                            </datalist>
+                            <button type="button" class="btn btn-outline" onclick="showCustomField('author')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <small style="color: #64748b; display: block; margin-top: 5px;">
+                            Начните вводить или выберите из списка популярных авторов
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="genre">Жанр</label>
+                        <div style="display: flex; gap: 10px;">
+                            <select id="genre" name="genre" class="form-control">
+                                <option value="">Выберите жанр</option>
+                                {% for genre in popular_genres %}
+                                <option value="{{ genre }}">{{ genre }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-outline" onclick="showCustomField('genre')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="publication_year">Год издания</label>
+                        <input type="number" id="publication_year" name="publication_year" 
+                               class="form-control" min="1000" max="{{ current_year }}"
+                               placeholder="{{ current_year }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="publisher">Издательство</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="publisher" name="publisher" class="form-control"
+                                   list="publishers-list" placeholder="Введите издательство">
+                            <datalist id="publishers-list">
+                                {% for publisher in popular_publishers %}
+                                <option value="{{ publisher }}">
+                                {% endfor %}
+                            </datalist>
+                            <button type="button" class="btn btn-outline" onclick="showCustomField('publisher')">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Правая колонка: Дополнительная информация -->
+                <div>
+                    <h3 style="color: #475569; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                        <i class="fas fa-cog"></i> Дополнительная информация
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="total_copies">Общее количество копий *</label>
+                        <input type="number" id="total_copies" name="total_copies" class="form-control" 
+                               required min="1" value="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="available_copies">Доступно копий *</label>
+                        <input type="number" id="available_copies" name="available_copies" class="form-control" 
+                               required min="0" value="1">
+                        <small style="color: #64748b; display: block; margin-top: 5px;">
+                            Не может превышать общее количество копий
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="location">Локация в библиотеке</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="location" name="location" class="form-control"
+                                   pattern="[A-Z][0-9]{1,2}" placeholder="Например: A1, B12">
+                            <button type="button" class="btn btn-outline" onclick="generateLocation()">
+                                <i class="fas fa-random"></i>
+                            </button>
+                        </div>
+                        <small style="color: #64748b; display: block; margin-top: 5px;">
+                            Формат: буква + цифра (A1, B12, C3)
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="description">Описание книги</label>
+                        <textarea id="description" name="description" class="form-control" 
+                                  rows="4" placeholder="Краткое описание книги..."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Быстрые шаблоны -->
+            <div style="margin-top: 30px; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
+                <h4 style="color: #475569; margin-bottom: 15px;">
+                    <i class="fas fa-magic"></i> Быстрые шаблоны
+                </h4>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-outline" onclick="fillTemplate('single')">
+                        Одна книга (1 копия)
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="fillTemplate('popular')">
+                        Популярная книга (5 копий)
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="fillTemplate('textbook')">
+                        Учебник (10 копий)
+                    </button>
+                    <button type="button" class="btn btn-outline" onclick="fillTemplate('rare')">
+                        Редкая книга (1 копия)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Кнопки отправки -->
+            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: flex-end;">
+                <button type="reset" class="btn btn-outline">
+                    <i class="fas fa-redo"></i> Очистить
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Сохранить книгу
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Модальное окно для кастомного поля -->
+<div id="customFieldModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background-color: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background-color: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%;">
+        <h3 style="color: #1e293b; margin-bottom: 20px;" id="modalTitle">Добавить новый элемент</h3>
+        <input type="text" id="customFieldInput" class="form-control" placeholder="Введите значение">
+        <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" class="btn btn-outline" onclick="closeModal()">Отмена</button>
+            <button type="button" class="btn btn-primary" onclick="saveCustomField()">Добавить</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentField = '';
+
+// Список популярных авторов, жанров и издательств (можно загрузить с сервера)
+const popularAuthors = [
+    "Лев Толстой", "Фёдор Достоевский", "Антон Чехов", "Николай Гоголь",
+    "Александр Пушкин", "Михаил Лермонтов", "Иван Тургенев", "Джордж Оруэлл",
+    "Эрнест Хемингуэй", "Джон Толкин", "Джоан Роулинг", "Агата Кристи"
+];
+
+const popularGenres = [
+    "Роман", "Детектив", "Фэнтези", "Научная фантастика", "Исторический роман",
+    "Биография", "Поэзия", "Драма", "Приключения", "Ужасы", "Триллер"
+];
+
+const popularPublishers = [
+    "Эксмо", "АСТ", "Просвещение", "Дрофа", "Росмэн", "Азбука", "Амфора"
+];
+
+// Показать модальное окно для кастомного поля
+function showCustomField(field) {
+    currentField = field;
+    const modal = document.getElementById('customFieldModal');
+    const title = document.getElementById('modalTitle');
+    const input = document.getElementById('customFieldInput');
+    
+    let fieldName = '';
+    switch(field) {
+        case 'author': fieldName = 'автора'; break;
+        case 'genre': fieldName = 'жанр'; break;
+        case 'publisher': fieldName = 'издательство'; break;
+    }
+    
+    title.textContent = `Добавить новый ${fieldName}`;
+    input.value = '';
+    input.placeholder = `Введите ${fieldName}...`;
+    modal.style.display = 'flex';
+    input.focus();
+}
+
+// Закрыть модальное окно
+function closeModal() {
+    document.getElementById('customFieldModal').style.display = 'none';
+}
+
+// Сохранить кастомное поле
+function saveCustomField() {
+    const input = document.getElementById('customFieldInput');
+    const value = input.value.trim();
+    
+    if (value) {
+        const field = document.getElementById(currentField);
+        
+        if (currentField === 'genre') {
+            // Для селекта добавляем новую опцию
+            const select = document.getElementById('genre');
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            select.appendChild(option);
+            select.value = value;
+        } else {
+            // Для текстовых полей устанавливаем значение
+            field.value = value;
+            
+            // Добавляем в datalist
+            const datalist = document.getElementById(`${currentField}s-list`);
+            if (datalist) {
+                const option = document.createElement('option');
+                option.value = value;
+                datalist.appendChild(option);
+            }
+        }
+    }
+    
+    closeModal();
+}
+
+// Генерация случайной локации
+function generateLocation() {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const letter = letters[Math.floor(Math.random() * letters.length)];
+    const number = Math.floor(Math.random() * 20) + 1;
+    document.getElementById('location').value = letter + number;
+}
+
+// Быстрые шаблоны
+function fillTemplate(template) {
+    switch(template) {
+        case 'single':
+            document.getElementById('total_copies').value = 1;
+            document.getElementById('available_copies').value = 1;
+            break;
+        case 'popular':
+            document.getElementById('total_copies').value = 5;
+            document.getElementById('available_copies').value = 3;
+            break;
+        case 'textbook':
+            document.getElementById('total_copies').value = 10;
+            document.getElementById('available_copies').value = 8;
+            break;
+        case 'rare':
+            document.getElementById('total_copies').value = 1;
+            document.getElementById('available_copies').value = 0;
+            break;
+    }
+}
+
+// Валидация количества копий
+document.getElementById('total_copies').addEventListener('change', function() {
+    const total = parseInt(this.value) || 0;
+    const available = document.getElementById('available_copies');
+    const availableValue = parseInt(available.value) || 0;
+    
+    if (availableValue > total) {
+        available.value = total;
+    }
+    
+    available.max = total;
+});
+
+document.getElementById('available_copies').addEventListener('change', function() {
+    const total = parseInt(document.getElementById('total_copies').value) || 0;
+    const available = parseInt(this.value) || 0;
+    
+    if (available > total) {
+        this.value = total;
+        alert('Доступных копий не может быть больше общего количества');
+    }
+});
+
+// Закрытие модального окна по ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+});
+
+// Клик вне модального окна
+document.getElementById('customFieldModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+
+<style>
+/* Дополнительные стили для формы */
+.form-control:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+}
+
+#customFieldModal {
+    transition: opacity 0.3s ease;
+}
+
+#customFieldModal > div {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+</style>
+{% endblock %}
